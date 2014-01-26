@@ -175,6 +175,27 @@ fn randpartition(list: &mut[int], p: int, r: int, rng: &mut rand::XorShiftRng) -
 	return partition(list, p, r);
 }
 
+/* counting sort */
+fn countingsort(list: &mut [int]) {
+	let max = 10000000;
+	let mut work: ~[int];
+	let mut copy: ~[int];
+	work = vec::from_elem(max + 1, 0);
+	copy = list.to_owned();
+	for j in copy.iter() {
+		work[*j] += 1;
+	}
+	for i in range(1, max + 1) {
+		work[i] += work[i - 1];
+	}
+	let mut j = copy.len() as int - 1;
+	while (j >= 0) {
+		list[work[copy[j]] - 1] = copy[j];
+		work[copy[j]] -= 1;
+		j -= 1;
+	}
+}
+
 fn main() {
 	/* XXX put these next two together in a struct or something */
 	let sorternames = [
@@ -183,6 +204,7 @@ fn main() {
 		"heapsort",
 		"quicksort",
 		"randquicksort",
+		"countingsort",
 	];
 	let sorters = [
 		//insertionsort, 
@@ -190,11 +212,12 @@ fn main() {
 		heapsort,
 		quicksort,
 		randquicksort,
+		countingsort,
 	];
 	let mut list: ~[int];
 
 	list = vec::with_capacity(1000000);
-	let between = Range::new(-100000000, 100000000);
+	let between = Range::new(0, 10000000);
 	let mut rng = rand::rng();
 	let begin = precise_time_ns();
 	for _ in range(0,5000000) {
