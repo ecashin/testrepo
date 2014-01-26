@@ -118,25 +118,86 @@ fn heapsort(list: &mut [int]) {
 	}
 }
 
+/* quicksort */
+fn quicksort(list: &mut[int]) {
+	let length = list.len() as int;
+	quicksorter(list, 0, length - 1);
+}
+
+fn quicksorter(list: &mut[int], p: int, r: int) {
+	if p < r {
+		let q = partition(list, p, r);
+		quicksorter(list, p, q - 1);
+		quicksorter(list, q + 1, r);
+	}
+}
+
+fn partition(list: &mut[int], p: int, r: int) -> int {
+	let x = list[r];
+	let mut i = p - 1;
+	let mut j = p;
+	while (j < r) {
+		if list[j] <= x {
+			i += 1;
+			let tmp = list[i];
+			list[i] = list[j];
+			list[j] = tmp;
+		}
+		j += 1;
+	}
+	let tmp = list[i + 1];
+	list[i + 1] = list[r];
+	list[r] = tmp;
+	return i + 1;
+}
+
+/* randomized quicksort */
+fn randquicksort(list: &mut[int]) {
+	let length = list.len() as int;
+	let mut rng: rand::XorShiftRng = rand::weak_rng();
+	randquicksorter(list, 0, length - 1, &mut rng);
+}
+
+fn randquicksorter(list: &mut[int], p: int, r: int, rng: &mut rand::XorShiftRng) {
+	if p < r {
+		let q = randpartition(list, p, r, rng);
+		randquicksorter(list, p, q - 1, rng);
+		randquicksorter(list, q + 1, r, rng);
+	}
+}
+
+fn randpartition(list: &mut[int], p: int, r: int, rng: &mut rand::XorShiftRng) -> int {
+	let between = Range::new(p, r);
+	let i = between.ind_sample(rng) as int;
+	let tmp = list[r];
+	list[r] = list[i];
+	list[i] = tmp;
+	return partition(list, p, r);
+}
+
 fn main() {
 	/* XXX put these next two together in a struct or something */
 	let sorternames = [
-		"insertionsort", 
+		//"insertionsort", 
 		"mergesort", 
 		"heapsort",
+		"quicksort",
+		"randquicksort",
 	];
 	let sorters = [
-		insertionsort, 
+		//insertionsort, 
 		mergesort, 
 		heapsort,
+		quicksort,
+		randquicksort,
 	];
 	let mut list: ~[int];
 
 	list = vec::with_capacity(1000000);
 	let between = Range::new(-100000000, 100000000);
-	let mut rng = rand::task_rng();
+	let mut rng = rand::rng();
 	let begin = precise_time_ns();
-	for _ in range(0,50000) {
+	for _ in range(0,5000000) {
 		list.push(between.ind_sample(&mut rng));
 	}
 	let elapsed = precise_time_ns() - begin;
