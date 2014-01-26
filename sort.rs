@@ -5,6 +5,7 @@ use std::rand;
 use std::rand::distributions::{IndependentSample, Range};
 use extra::time::precise_time_ns;
 
+/* Insertion Sort */
 fn insertionsort(list: &mut [int]) {
 	for j in range(1, list.len() as int) {
 		let key = list[j];
@@ -17,6 +18,7 @@ fn insertionsort(list: &mut [int]) {
 	}
 }
 
+/* Merge Sort */
 fn merge(list: &mut [int], p: uint, q: uint, r: uint) {
 	let n1 = q - p + 1;
 	let n2 = r - q;
@@ -60,10 +62,74 @@ fn mergesort(list: &mut [int]) {
 	mergesorter(list, 0, length - 1);
 }
 
+/* Heap Sort */
+fn heapleft(i: int) -> int {
+	2*i + 1
+}
+
+fn heapright(i: int) -> int {
+	2*i + 2
+}
+
+fn maxheapify(list: &mut [int], i: int, size: uint) {
+	let mut largest;
+	let l = heapleft(i);
+	let r = heapright(i);
+	if (l as uint) < size && list[l] > list[i] {
+		largest = l;
+	} else {
+		largest = i;
+	}
+	if (r as uint) < size && list[r] > list[largest] {
+		largest = r;
+	}
+	if largest != i {
+		let tmp = list[i];
+		list[i] = list[largest];
+		list[largest] = tmp;
+		maxheapify(list, largest, size);
+	}
+}
+
+fn buildmaxheap(list: &mut [int]) {
+	let size = list.len();
+	/* this next line is broken?--rust bug? */
+	//for i in std::iter::range_step(list.len()/2 - 1, -1, -1) {
+	let mut i: int = list.len() as int /2 - 1;
+	while (i >= 0) {
+		maxheapify(list, i, size);
+		i -= 1;
+	}
+}
+
+fn heapsort(list: &mut [int]) {
+	buildmaxheap(list);
+	let mut size = list.len();
+	/* this next line is broken--rust bug?! */
+	//for i in std::iter::range_step(list.len() - 1, 0, -1) {
+	let mut i: int = list.len() as int - 1;
+	while (i > 0) {
+		let tmp = list[0];
+		list[0] = list[i];
+		list[i] = tmp;
+		size -= 1;
+		maxheapify(list, 0, size);
+		i -= 1;
+	}
+}
+
 fn main() {
 	/* XXX put these next two together in a struct or something */
-	let sorternames = ["insertionsort", "mergesort"];
-	let sorters = [insertionsort, mergesort];
+	let sorternames = [
+		"insertionsort", 
+		"mergesort", 
+		"heapsort",
+	];
+	let sorters = [
+		insertionsort, 
+		mergesort, 
+		heapsort,
+	];
 	let mut list: ~[int];
 
 	list = vec::with_capacity(1000000);
@@ -84,7 +150,13 @@ fn main() {
 		println!("{:?} took {} ms", sorternames[a], elapsed/1000000);
 		for i in range(0, listtosort.len() - 1) {
 			if (listtosort[i] > listtosort[i + 1]) {
-				println!("{:?} has an error at entry {}", sorternames[a], i);
+				println!("{:?} has an error at index {}", sorternames[a], i);
+				if (listtosort.len() < 100) {
+					for x in listtosort.iter() {
+						print!("{} ", *x);
+					}
+				}
+				print("\n");
 				break;
 			}
 		}
