@@ -5,6 +5,11 @@ use std::rand;
 use std::rand::distributions::{IndependentSample, Range};
 use extra::time::precise_time_ns;
 
+enum Globals {
+	DistMax = 10000000,
+	ListSize = 6000000,
+}
+
 /* Insertion Sort */
 fn insertionsort(list: &mut [int]) {
 	for j in range(1, list.len() as int) {
@@ -177,7 +182,7 @@ fn randpartition(list: &mut[int], p: int, r: int, rng: &mut rand::XorShiftRng) -
 
 /* counting sort */
 fn countingsort(list: &mut [int]) {
-	let max = 10000000;
+	let max = DistMax as uint;
 	let mut work: ~[int];
 	let mut copy: ~[int];
 	work = vec::from_elem(max + 1, 0);
@@ -196,6 +201,43 @@ fn countingsort(list: &mut [int]) {
 	}
 }
 
+/* radix sort */
+fn countingsortrad(list: &mut [int], digit: uint) {
+	let pow10 = [1, 10, 100, 1000, 10000, 100000, 1000000,
+		10000000, 100000000, 1000000000];
+	let max = 9;
+	let mut work: ~[int];
+	let mut copy: ~[int];
+	work = vec::from_elem(max + 1, 0);
+	copy = list.to_owned();
+	for j in copy.iter() {
+		let idx = (*j / pow10[digit]) % 10;
+		work[idx] += 1;
+	}
+	for i in range(1, max + 1) {
+		work[i] += work[i - 1];
+	}
+	let mut j = copy.len() as int - 1;
+	while (j >= 0) {
+		let idx = (copy[j] / pow10[digit]) % 10;
+		list[work[idx] - 1] = copy[j];
+		work[idx] -= 1;
+		j -= 1;
+	}
+}
+
+fn radixsort(list: &mut [int]) {
+	let mut x = DistMax as uint;
+	let mut digits = 0;
+	while (x > 0) {
+		x /= 10;
+		digits += 1;
+	}
+	for i in range(0, digits) {
+		countingsortrad(list, i as uint);
+	}
+}
+
 fn main() {
 	/* XXX put these next two together in a struct or something */
 	let sorternames = [
@@ -205,6 +247,7 @@ fn main() {
 		"quicksort",
 		"randquicksort",
 		"countingsort",
+		"radixsort",
 	];
 	let sorters = [
 		//insertionsort, 
@@ -213,14 +256,15 @@ fn main() {
 		quicksort,
 		randquicksort,
 		countingsort,
+		radixsort,
 	];
 	let mut list: ~[int];
 
-	list = vec::with_capacity(1000000);
-	let between = Range::new(0, 10000000);
+	list = vec::with_capacity(ListSize as uint);
+	let between = Range::new(0, DistMax as int);
 	let mut rng = rand::rng();
 	let begin = precise_time_ns();
-	for _ in range(0,5000000) {
+	for _ in range(0,ListSize as uint) {
 		list.push(between.ind_sample(&mut rng));
 	}
 	let elapsed = precise_time_ns() - begin;
